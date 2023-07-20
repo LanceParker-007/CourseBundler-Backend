@@ -69,3 +69,49 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
     user,
   });
 });
+
+export const changePassword = catchAsyncError(async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return next(new ErrorHandler(`Please enter all fields`, 400));
+  }
+
+  const user = await User.findById(req.user._id).select("+password");
+  const isMatch = await user.comparePassword(oldPassword);
+  if (!isMatch) {
+    return next(new ErrorHandler(1`Incorrect old password`, 400));
+  }
+
+  // We do need to hash password again because of the presave method we created in User model
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password changed successfully",
+  });
+});
+
+export const updateProfile = catchAsyncError(async (req, res, next) => {
+  const { name, email } = req.body;
+  const user = await User.findById(req.user._id).select("+password");
+
+  if (name) user.name = name;
+  if (email) user.email = email;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+  });
+});
+
+export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
+  //Cloudinary todo
+
+  res.status(200).json({
+    success: true,
+    message: "Profile picture updated successfully",
+  });
+});
