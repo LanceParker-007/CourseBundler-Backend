@@ -2,7 +2,11 @@ import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { User } from "../models/User.js";
 import { sendToken } from "../utils/sendToken.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import crypto from "crypto";
+import { Course } from "../models/Course.js";
 
+//Auth
 export const register = catchAsyncError(async (req, res, next) => {
   const { name, email, password } = req.body;
 
@@ -61,6 +65,7 @@ export const logout = catchAsyncError(async (req, res, next) => {
     });
 });
 
+//Profile
 export const getMyProfile = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user._id);
 
@@ -115,3 +120,63 @@ export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
     message: "Profile picture updated successfully",
   });
 });
+
+//Forget Password
+export const forgetPassword = catchAsyncError(async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return next(new ErrorHandler(`User not found`, 400));
+
+  const resetToken = await user.getResetToken();
+  await user.save();
+
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+  const message = `Click on the link to reset your password. ${resetPasswordUrl}.`;
+  // If you have not requested to change your password, please report to us } ${reportUrl};
+
+  //send token via email
+  await sendEmail(user.email, `CourseBundler Reset Password`, message);
+
+  res.status(200).json({
+    success: true,
+    message: `Resend token successfully sent to ${user.email}`,
+  });
+});
+
+//Reset Password
+export const resetPassword = catchAsyncError(async (req, res, next) => {
+  const { resetpasswordtoken } = req.params;
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetpasswordtoken)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!user) {
+    return next(new ErrorHandler(`Token is invalid or has been expired`));
+  }
+
+  user.password = req.body.password; // const {password} = req.body;
+  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password changed successfully.",
+  });
+});
+
+export const addToPlaylist = catchAsyncError(async (req, res, next) => {});
+
+export const removeFromPlaylist = catchAsyncError(async (req, res, next) => {});

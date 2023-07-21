@@ -1,10 +1,14 @@
 import express from "express";
 import {
+  addToPlaylist,
   changePassword,
+  forgetPassword,
   getMyProfile,
   login,
   logout,
   register,
+  removeFromPlaylist,
+  resetPassword,
   updateProfile,
   updateProfilePicture,
 } from "../controllers/userController.js";
@@ -36,8 +40,14 @@ router
   .put(isAuthenticated, updateProfilePicture);
 
 //ForgetPassword
+router.route("/forgetpassword").post(forgetPassword);
 //ResetPassword
+router.route("/resetpassword/:resetpasswordtoken").put(resetPassword);
 
 //AddToPlaylist
+router.route("/addtoplaylist").post(isAuthenticated, addToPlaylist);
+
 //RemoveFromPlaylist
+router.route("/removefromplaylist").delete(isAuthenticated, removeFromPlaylist);
+
 export default router;

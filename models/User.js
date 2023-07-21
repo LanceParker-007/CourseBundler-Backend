@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import jwt from "jsonwebtoken";
 import bcrpyt from "bcrypt";
+import crypto from "crypto"; // default hota hai node mein
 
 const schema = new mongoose.Schema({
   name: {
@@ -54,8 +55,8 @@ const schema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-  ResetPasswordToken: String,
-  ResetPasswordExpire: String,
+  resetPasswordToken: String,
+  resetPasswordExpire: String,
 });
 
 //PreSave or Hash Password
@@ -78,6 +79,21 @@ schema.methods.getJWTToken = function () {
 //Compare Password
 schema.methods.comparePassword = async function (password) {
   return await bcrpyt.compare(password, this.password);
+};
+
+//Generate Reset Token
+schema.methods.getResetToken = function () {
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  //hash resetToken
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  this.resetPasswordExpire = Date.now() + 1000 * 60 * 5;
+
+  return resetToken;
 };
 
 export const User = mongoose.model("User", schema);
