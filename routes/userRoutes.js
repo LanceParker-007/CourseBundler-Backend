@@ -50,4 +50,5 @@ router.route("/addtoplaylist").post(isAuthenticated, addToPlaylist);
 //RemoveFromPlaylist
 router.route("/removefromplaylist").delete(isAuthenticated, removeFromPlaylist);
 
+//Admin Routes
 export default router;
