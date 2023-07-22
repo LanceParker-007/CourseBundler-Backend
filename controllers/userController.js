@@ -5,19 +5,23 @@ import { sendToken } from "../utils/sendToken.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
 import { Course } from "../models/Course.js";
+import cloudinary from "cloudinary";
+import getDataUri from "../utils/dataUri.js";
 
 //Auth
 export const register = catchAsyncError(async (req, res, next) => {
   const { name, email, password } = req.body;
+  const file = req.file;
 
-  // const file = req.file;
-
-  if (!name || !email || !password)
+  if (!name || !email || !password || !file)
     return next(new ErrorHandler("Please enter all fields"), 400);
 
   let user = await User.findOne({ email });
 
   if (user) return next(new ErrorHandler("User already exist"), 409);
+
+  const fileUri = getDataUri(file);
+  const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
 
   //Upload file on cloudinary
   user = await User.create({
@@ -25,8 +29,8 @@ export const register = catchAsyncError(async (req, res, next) => {
     email,
     password,
     avatar: {
-      public_id: "tempid",
-      url: "tempurl",
+      public_id: mycloud.public_id,
+      url: mycloud.secure_url,
     },
   });
 
@@ -35,8 +39,6 @@ export const register = catchAsyncError(async (req, res, next) => {
 
 export const login = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
-
-  // const file = req.file;
 
   if (!email || !password)
     return next(new ErrorHandler("Please enter all fields"), 400);
@@ -113,7 +115,22 @@ export const updateProfile = catchAsyncError(async (req, res, next) => {
 });
 
 export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
-  //Cloudinary todo
+  const user = await User.findById(req.user._id);
+  const file = req.file;
+
+  if (!file) return next(new ErrorHandler(`Upload new profile picture`, 400));
+
+  const fileUri = getDataUri(file);
+  const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
+
+  await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+
+  user.avatar = {
+    public_id: mycloud.public_id,
+    url: mycloud.secure_url,
+  };
+
+  await user.save();
 
   res.status(200).json({
     success: true,

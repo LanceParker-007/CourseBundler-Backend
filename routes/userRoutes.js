@@ -13,11 +13,12 @@ import {
   updateProfilePicture,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
+import singleUpload from "../middlewares/multer.js";
 
 const router = express.Router();
 
 //To register a new usr
-router.route("/register").post(register);
+router.route("/register").post(singleUpload, register);
 
 //Login
 router.route("/login").post(login);
@@ -32,7 +33,9 @@ router.route("/me").get(isAuthenticated, getMyProfile);
 router.route("/changepassword").put(isAuthenticated, changePassword);
 
 //UpdateProfile
-router.route("/updateprofile").put(isAuthenticated, updateProfile);
+router
+  .route("/updateprofile")
+  .put(isAuthenticated, singleUpload, updateProfile);
 
 //UpdateProfilePicture
 router
