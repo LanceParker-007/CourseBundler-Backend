@@ -77,6 +77,29 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
   });
 });
 
+export const deleteMyProfile = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+
+  //Delete profile picure from cloudinary
+  await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+
+  //Cancel subscription
+
+  //Delete profile
+  await user.deleteOne();
+
+  //cookie bhi uda denge
+  res
+    .status(200)
+    .cookie("token", null, {
+      expires: new Date(Date.now()),
+    })
+    .json({
+      success: true,
+      message: "Profile deleted successfully",
+    });
+});
+
 export const changePassword = catchAsyncError(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
@@ -238,5 +261,54 @@ export const removeFromPlaylist = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: `Removed from playlist`,
+  });
+});
+
+// ------Admin Controllers ----------------
+
+//Get all users
+export const getAllUsers = catchAsyncError(async (req, res, next) => {
+  const users = await User.find();
+
+  res.status(200).json({
+    success: true,
+    users,
+  });
+});
+
+//Update user role
+export const updateUserRole = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) return next(new ErrorHandler(`User not found`, 404));
+
+  if (user.role === "user") user.role = "admin";
+  else user.role = "user";
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User role updated to ${user.role}`,
+  });
+});
+
+//Delete user
+export const deleteUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) return next(new ErrorHandler(`User not found`, 404));
+
+  //Remove avatar(user image) from cloudinary
+  await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+
+  //Also cancel its subscription
+
+  //delete user
+  await user.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: `User deleted successfully`,
   });
 });
