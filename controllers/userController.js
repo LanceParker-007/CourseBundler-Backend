@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { Course } from "../models/Course.js";
 import cloudinary from "cloudinary";
 import getDataUri from "../utils/dataUri.js";
+import { Stats } from "../models/Stats.js";
 
 //Auth
 export const register = catchAsyncError(async (req, res, next) => {
@@ -311,4 +312,23 @@ export const deleteUser = catchAsyncError(async (req, res, next) => {
     success: true,
     message: `User deleted successfully`,
   });
+});
+
+//Watcher
+User.watch().on("change", async () => {
+  const stats = await Stats.find({})
+    .sort({
+      createdAt: "desc",
+    })
+    .limit(1);
+
+  const subscription = await User.find({
+    "subscription.status": "active",
+  });
+
+  stats[0].users = await User.countDocuments();
+  stats[0].subscription = subscription.length;
+  stats[0].createdAt = new Date(Date.now());
+
+  await stats.save();
 });
