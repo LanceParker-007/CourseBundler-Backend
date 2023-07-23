@@ -28,12 +28,6 @@ try {
     await Stats.create();
   });
 
-  //temporary to check
-  const temp = async () => {
-    await Stats.create({});
-  };
-  temp();
-
   app.listen(process.env.PORT || 5000, () => {
     // Function to start/listen server
     console.log(`Serving running on port ${process.env.PORT}`);
