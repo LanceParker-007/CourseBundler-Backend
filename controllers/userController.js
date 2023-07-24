@@ -53,6 +53,8 @@ export const login = catchAsyncError(async (req, res, next) => {
   if (!isMatch)
     return next(new ErrorHandler("Incorrect email or password!"), 401);
 
+  // Send the response with the appropriate header
+  res.set("Access-Control-Allow-Credentials", "true");
   sendToken(res, user, `Welcome back, ${user.name}`, 201);
 });
 
