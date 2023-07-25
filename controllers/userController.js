@@ -148,7 +148,7 @@ export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
   const file = req.file;
 
   if (!file) {
-    return next(new ErrorHandler("Please upload a new image"), 400);
+    return next(new ErrorHandler("Please upload an image!"), 400);
   }
 
   const fileUri = getDataUri(file);

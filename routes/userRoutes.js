@@ -47,7 +47,7 @@ router
 //UpdateProfilePicture
 router
   .route("/updateprofilepicture")
-  .put(isAuthenticated, updateProfilePicture);
+  .put(isAuthenticated, singleUpload, updateProfilePicture); //singleUpload so that multer can do its work
 
 //ForgetPassword
 router.route("/forgetpassword").post(forgetPassword);
