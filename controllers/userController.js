@@ -147,7 +147,9 @@ export const updateProfilePicture = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user._id);
   const file = req.file;
 
-  if (!file) return next(new ErrorHandler(`Upload new profile picture`, 400));
+  if (!file) {
+    return next(new ErrorHandler("Please upload a new image"), 400);
+  }
 
   const fileUri = getDataUri(file);
   const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
