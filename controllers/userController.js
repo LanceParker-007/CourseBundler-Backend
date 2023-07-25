@@ -115,7 +115,7 @@ export const changePassword = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.user._id).select("+password");
   const isMatch = await user.comparePassword(oldPassword);
   if (!isMatch) {
-    return next(new ErrorHandler(1`Incorrect old password`, 400));
+    return next(new ErrorHandler(`Incorrect old password`, 400));
   }
 
   // We do need to hash password again because of the presave method we created in User model
