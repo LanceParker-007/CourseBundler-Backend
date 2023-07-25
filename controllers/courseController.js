@@ -32,11 +32,11 @@ export const getAllCourses = catchAsyncError(async (req, res, next) => {
 // Create a new Course
 export const createCourse = catchAsyncError(async (req, res, next) => {
   const { title, description, category, createdBy } = req.body;
+  const file = req.file; // multer
 
-  if (!title || !description || !category || !createdBy)
+  if (!title || !description || !category || !createdBy || !file)
     return next(new ErrorHandler("Please add all fields", 400));
 
-  const file = req.file; // multer
   const fileUri = getDataUri(file); //Get file details through multer and dataUri
 
   const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
@@ -176,5 +176,5 @@ Course.watch().on("change", async () => {
   stats[0].views = totalViews;
   stats[0].createdAt = new Date(Date.now());
 
-  await stats.save();
+  await stats[0].save();
 });
